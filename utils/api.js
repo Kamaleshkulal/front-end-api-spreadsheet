@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000"; // Django Backend URL
+const API_URL = "https://backend-api-spreadsheet-production.up.railway.app"// Django Backend URL
 
 export const api = axios.create({
     baseURL: API_URL + "/api/v1",
