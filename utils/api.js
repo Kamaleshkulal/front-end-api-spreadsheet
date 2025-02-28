@@ -16,8 +16,6 @@ export const addSpreadsheet = (data) => api.post("/spreadsheets/", data);
 export const updateSpreadsheet = (id, data) => api.put(`/spreadsheets/${id}/`, data);
 export const deleteSpreadsheet = (id) => api.delete(`/spreadsheets/${id}/`);
 
-export const getSpreadsheetDetails = (id) => api.get(`/spreadsheets/${id}/`);
-
 
 // Cells API
 export const getCells = () => api.get("/cells/");
