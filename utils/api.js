@@ -10,18 +10,8 @@ export const api = axios.create({
 // Spreadsheets API
 export const createSpreadsheet = (data) => api.post("/spreadsheets/", data);
 
-export const getSpreadsheets = () => api.get("/spreadsheets/");
+export const getSpreadsheets = () => api.get("/spreadsheets-with-link/");
 export const getSpreadsheet = (id) => api.get(`/spreadsheets/${id}/`);
 export const addSpreadsheet = (data) => api.post("/spreadsheets/", data);
 export const updateSpreadsheet = (id, data) => api.put(`/spreadsheets/${id}/`, data);
 export const deleteSpreadsheet = (id) => api.delete(`/spreadsheets/${id}/`);
-
-
-// Cells API
-export const getCells = () => api.get("/cells/");
-export const getSpreadsheetCells = (spreadsheetId) => api.get(`/spreadsheets/${spreadsheetId}/cells/`);
-export const addCell = (data) => api.post("/cells/", data);
-export const updateCell = (id, data) => api.put(`/cells/${id}/`, data);
-export const deleteCell = (id) => api.delete(`/cells/${id}/`);
-export const evaluateCell = (id) => api.post(`/cells/${id}/evaluate/`);
-export const cleanData = (spreadsheetId) => api.post(`/cells/clean/`, { spreadsheet_id: spreadsheetId });

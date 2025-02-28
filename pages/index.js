@@ -32,6 +32,7 @@ export default function DataTable() {
         created_at: item.created_at
           ? new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
           : "N/A",
+        link: item.link ? item.link.link : "N/A"
       }));
       setSpreadsheets(formattedData);
       console.log("Fetched Data:", formattedData);
@@ -93,7 +94,12 @@ export default function DataTable() {
   };
 
   const handleView = (id) => {
-    router.push(`/spreadsheet/${id}`);
+    const spreadsheet = spreadsheets.find((spreadsheet) => spreadsheet.id === id);
+    if (spreadsheet && spreadsheet.link) {
+      window.open(spreadsheet.link, "_blank"); // Opens the link in a new tab
+    } else {
+      console.error("Link not found for the spreadsheet");
+    }
   };
 
   const columns = [
