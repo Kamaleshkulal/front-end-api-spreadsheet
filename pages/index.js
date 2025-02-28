@@ -1,114 +1,192 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { DataGrid } from "@mui/x-data-grid";
+import Paper from "@mui/material/Paper";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import { getSpreadsheets, deleteSpreadsheet, updateSpreadsheet, createSpreadsheet } from "../utils/api";
+import { Box, Container } from "@mui/material";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+export default function DataTable() {
+  const [spreadsheets, setSpreadsheets] = useState([]);
+  const [editMode, setEditMode] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10, // Maximum 10 per page
+  });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  const router = useRouter();
 
-export default function Home() {
+  useEffect(() => {
+    fetchSpreadsheets();
+  }, []);
+
+  const fetchSpreadsheets = async () => {
+    try {
+      const { data } = await getSpreadsheets();
+      const formattedData = data.map((item, index) => ({
+        id: item.id,
+        si_no: index + 1, // Serial Number starts from 1
+        name: item.name,
+        created_at: item.created_at
+          ? new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+          : "N/A",
+      }));
+      setSpreadsheets(formattedData);
+      console.log("Fetched Data:", formattedData);
+    } catch (error) {
+      console.error("Error fetching spreadsheets:", error);
+    }
+  };
+
+  const handleCreate = async () => {
+    try {
+      const newSpreadsheet = { name: "New Spreadsheet" };
+      const { data } = await createSpreadsheet(newSpreadsheet);
+      setSpreadsheets((prev) => [
+        ...prev,
+        {
+          ...data,
+          si_no: prev.length + 1, // Ensure SI No. updates correctly
+          created_at: new Date(data.created_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }),
+        },
+      ]);
+    } catch (error) {
+      console.error("Error creating spreadsheet:", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteSpreadsheet(id);
+      setSpreadsheets((prev) =>
+        prev.filter((item) => item.id !== id).map((item, index) => ({
+          ...item,
+          si_no: index + 1, // Recalculate SI No. after delete
+        }))
+      );
+    } catch (error) {
+      console.error("Error deleting spreadsheet:", error);
+    }
+  };
+
+  const handleEdit = (id, name) => {
+    setEditMode(id);
+    setEditName(name);
+  };
+
+  const handleUpdate = async (id) => {
+    try {
+      await updateSpreadsheet(id, { name: editName });
+      setSpreadsheets((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, name: editName } : item))
+      );
+      setEditMode(null);
+    } catch (error) {
+      console.error("Error updating spreadsheet:", error);
+    }
+  };
+
+  const handleView = (id) => {
+    router.push(`/spreadsheet/${id}`);
+  };
+
+  const columns = [
+    { field: "si_no", headerName: "SI No.", width: 90 }, // Added SI No. column
+    { field: "id", headerName: "ID", width: 90 },
+    {
+      field: "name",
+      headerName: "Spreadsheet Name",
+      width: 250,
+      renderCell: (params) =>
+        editMode === params.row.id ? (
+          <TextField
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            size="small"
+            autoFocus
+          />
+        ) : (
+          <span>{params.value}</span>
+        ),
+    },
+    {
+      field: "created_at",
+      headerName: "Created Time",
+      width: 150,
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 250,
+      renderCell: (params) => (
+        <Box display="flex" gap={1} className="mt-2">
+          {editMode === params.row.id ? (
+            <Button
+              variant="contained"
+              color="success"
+              size="small"
+              onClick={() => handleUpdate(params.row.id)}
+            >
+              Save
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => handleEdit(params.row.id, params.row.name)}
+            >
+              Edit
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => handleDelete(params.row.id)}
+          >
+            Delete
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            size="small"
+            onClick={() => handleView(params.row.id)}
+          >
+            View
+          </Button>
+        </Box>
+      ),
+    },
+  ];
+
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+    <Container maxWidth="md">
+      <Paper sx={{ height: 710, width: "110%", padding: 2, marginTop: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <Button variant="contained" color="primary" onClick={handleCreate}>
+            Create New Spreadsheet
+          </Button>
+        </Box>
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <DataGrid
+            rows={spreadsheets}
+            columns={columns}
+            pageSizeOptions={[5, 10]}
+            pagination
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            checkboxSelection
+            sx={{ minWidth: 600 }}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        </Box>
+      </Paper>
+    </Container>
   );
 }
