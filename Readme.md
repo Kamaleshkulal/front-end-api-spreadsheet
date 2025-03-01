@@ -30,6 +30,16 @@ Ensure you have the following installed:
    npm run dev
    ```
 
+Live Backend Server
+
+The backend server for this project is available at:
+https://sheetapp.onrender.com/
+
+Ensure the backend server is running when using the application.
+
+
+
+
 ## Custom Spreadsheet Functions
 
 ### 1. Calculation Functions
